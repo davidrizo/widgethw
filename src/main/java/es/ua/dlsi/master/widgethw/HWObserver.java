@@ -39,20 +39,20 @@ public class HWObserver {
             @Override
             public void run() {
                 Logger.getLogger(this.getClass().getName()).log(Level.FINE, "HW Observer read");
+                final long memoryUsed = hwReader.getMemoryUsed();
+                double[] load = hwReader.getCPULoad();
+                double sum = 0;
+                for (double d : load) {
+                    sum += d;
+                }
+                final double cpu = (double) sum / (double) load.length;
                 Platform.runLater(new Runnable() {
                     @Override
                     public void run() {
                         // Change it inside this method because it may with the main JavaFX thread through binding
-                        long memoryUsed = hwReader.getMemoryUsed();
                         if (usedMemory.get() != memoryUsed) {// notify just about changes
                             usedMemory.setValue(memoryUsed);
                         }
-                        double[] load = hwReader.getCPULoad();
-                        double sum = 0;
-                        for (double d : load) {
-                            sum += d;
-                        }
-                        double cpu = (double) sum / (double) load.length;
                         if (cpuSumPercentage.get() != cpu) {
                             cpuSumPercentage.setValue(cpu); // notify just about changes
                         }
