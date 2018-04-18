@@ -1,24 +1,20 @@
 package es.ua.dlsi.master.widgethw;
 
 import es.ua.dlsi.master.widgethw.oshi.HWReader;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.chart.Axis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.ToggleButton;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.MouseEvent;
 
 import javax.sound.sampled.LineUnavailableException;
 import java.net.URL;
@@ -44,6 +40,10 @@ public class Controller implements Initializable {
     TableColumn<Measurement, Float> colRAM;
     @FXML
     TableColumn<Measurement, Float> colRMS;
+    @FXML
+    MenuItem menuItemRunStop;
+
+    BooleanProperty running;
 
     HWObserver hwObserver;
     ISoundReader soundReader;
@@ -57,12 +57,27 @@ public class Controller implements Initializable {
     XYChart.Series<String, Double> cpusSUMPercentages;
     SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 
+
     Model model;
 
     public Controller() throws LineUnavailableException {
         model = new Model();
         hwObserver = new HWObserver(new HWReader()); // TODO Cambiar por inyección de código
         lineChartData = FXCollections.observableArrayList();
+
+        running = new SimpleBooleanProperty(false);
+        running.addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                if (newValue.booleanValue()) {
+                    hwObserver.run();
+                    menuItemRunStop.setText("Stop");
+                } else {
+                    hwObserver.stop();
+                    menuItemRunStop.setText("Run");
+                }
+            }
+        });
 
         // add a lineChart for each measure
         usedRAMPercentages = new LineChart.Series<>("Used memory", FXCollections.<XYChart.Data<String, Double>>observableArrayList());
@@ -98,16 +113,7 @@ public class Controller implements Initializable {
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        btnRun.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                if (newValue.booleanValue()) {
-                    hwObserver.run();
-                } else {
-                    hwObserver.stop();
-                }
-            }
-        });
+        btnRun.selectedProperty().bindBidirectional(running);
 
         // when ram values change add it to the chart
         hwObserver.usedMemoryProperty().addListener(new ChangeListener<Number>() {
@@ -134,5 +140,10 @@ public class Controller implements Initializable {
     @FXML
     private void handleSnapshot() {
         model.addMeasurement(new Measurement(soundReader.lastRMSProperty().get(), hwObserver.getCpuSumPercentage(), hwObserver.getTotalMemory()));
+    }
+
+    @FXML
+    private void handleMenRunStop() {
+        running.setValue(running.not().get());
     }
 }

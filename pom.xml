@@ -39,7 +39,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Concurrent JUnit -->
+        <!-- Concurrent JUnit - Just if simultaneous threads must be launched: https://github.com/ThomasKrieger/concurrent-junit -->
         <dependency>
             <groupId>com.vmlens</groupId>
             <artifactId>concurrent-junit</artifactId>

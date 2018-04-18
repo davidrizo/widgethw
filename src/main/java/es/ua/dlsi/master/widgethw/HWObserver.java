@@ -17,7 +17,6 @@ import java.util.logging.Logger;
  */
 public class HWObserver {
     private final IHWReader hwReader;
-    private TimerTask timerTask;
     private Timer timer;
     /**
      * Delay in ms between succesive reads. By default it is 1000ms
@@ -33,11 +32,10 @@ public class HWObserver {
         this.refreshTime = new SimpleLongProperty(1000);
         usedMemory = new SimpleLongProperty();
         cpuSumPercentage = new SimpleDoubleProperty();
-        initTimer();
     }
 
-    private void initTimer() {
-        timerTask = new TimerTask() {
+    private TimerTask createTimerTask() {
+        TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
                 Logger.getLogger(this.getClass().getName()).log(Level.FINE, "HW Observer read");
@@ -46,28 +44,28 @@ public class HWObserver {
                     public void run() {
                         // Change it inside this method because it may with the main JavaFX thread through binding
                         usedMemory.setValue(hwReader.getMemoryUsed());
-                        double [] load = hwReader.getCPULoad();
+                        double[] load = hwReader.getCPULoad();
                         double sum = 0;
-                        for (double d: load) {
+                        for (double d : load) {
                             sum += d;
                         }
-                        cpuSumPercentage.setValue((double)sum/(double)load.length);
+                        cpuSumPercentage.setValue((double) sum / (double) load.length);
                     }
                 });
             }
         };
+        return timerTask;
     }
 
     public void run() {
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "HW Observer run");
         timer = new Timer(true);
-        timer.scheduleAtFixedRate(timerTask, 0, refreshTime.get());
+        timer.scheduleAtFixedRate(createTimerTask(), 0, refreshTime.get());
     }
 
     public void stop() {
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "HW Observer stopped");
         timer.cancel();
-        timer = null;
     }
 
     /**
