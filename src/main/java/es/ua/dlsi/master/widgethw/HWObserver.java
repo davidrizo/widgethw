@@ -43,13 +43,19 @@ public class HWObserver {
                     @Override
                     public void run() {
                         // Change it inside this method because it may with the main JavaFX thread through binding
-                        usedMemory.setValue(hwReader.getMemoryUsed());
+                        long memoryUsed = hwReader.getMemoryUsed();
+                        if (usedMemory.get() != memoryUsed) {// notify just about changes
+                            usedMemory.setValue(memoryUsed);
+                        }
                         double[] load = hwReader.getCPULoad();
                         double sum = 0;
                         for (double d : load) {
                             sum += d;
                         }
-                        cpuSumPercentage.setValue((double) sum / (double) load.length);
+                        double cpu = (double) sum / (double) load.length;
+                        if (cpuSumPercentage.get() != cpu) {
+                            cpuSumPercentage.setValue(cpu); // notify just about changes
+                        }
                     }
                 });
             }
