@@ -1,6 +1,7 @@
 package es.ua.dlsi.master.widgethw;
 
 import es.ua.dlsi.master.widgethw.oshi.HWReader;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
@@ -17,10 +18,14 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import javax.sound.sampled.LineUnavailableException;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @autor drizo
@@ -146,4 +151,39 @@ public class Controller implements Initializable {
     private void handleMenRunStop() {
         running.setValue(running.not().get());
     }
+
+    @FXML
+    private void handleClose() {
+        Platform.exit();
+    }
+
+    @FXML
+    private void handleOpen() {
+        OpenSaveFileDialog dialog = new OpenSaveFileDialog();
+        File file = dialog.openFile("WidgetHW", "WidgetHW XML", "xml");
+        if (file != null) {
+            try {
+                model.open(file);
+            } catch (IOException e) {
+                Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Cannot load model", e);
+                new DialogoError().show("HWWidget", "Cannot load model", e);
+            }
+        }
+
+    }
+
+    @FXML
+    private void handleSaveAs() {
+        OpenSaveFileDialog dialog = new OpenSaveFileDialog();
+        File file = dialog.saveFile("WidgetHW", "WidgetHW XML", "xml");
+        if (file != null) {
+            try {
+                model.saveAs(file);
+            } catch (IOException e) {
+                Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Cannot save model", e);
+                new DialogoError().show("HWWidget", "Cannot save model", e);
+            }
+        }
+    }
+
 }
